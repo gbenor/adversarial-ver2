@@ -14,41 +14,15 @@
 \usepackage{lipsum}
 \usepackage[ruled,vlined]{algorithm2e}
 
-\title{A template for the \emph{arxiv} style}
+\title{A reinforcement-learning interface environment to design and evaluate adversarial attacks}
 
-
-% \author{Gilad Ben Or\\% Name author
-%     \href{mailto:benorgi@post.bgu.ac.il}{\texttt{benorgi@post.bgu.ac.il}} %% Email author 1 
-% % }
 
 \author{
   Gilad Ben Or\\
   ID: 036256527\\
   \texttt{benorgi@post.bgu.ac.il} \\
   }
-%   %% examples of more authors
-%   \And
-%  Elias D.~Striatum \\
-%   Department of Electrical Engineering\\
-%   Mount-Sheikh University\\
-%   Santa Narimana, Levand \\
-%   \texttt{stariate@ee.mount-sheikh.edu} \\
-%   %% \AND
-% %   %% Coauthor \\
-%   %% Affiliation \\
-%   %% Address \\
-%   %% \texttt{email} \\
-%   %% \And
-%   %% Coauthor \\
-%   %% Affiliation \\
-%   %% Address \\
-%   %% \texttt{email} \\
-%   %% \And
-%   %% Coauthor \\
-%   %% Affiliation \\
-%   %% Address \\
-%   %% \texttt{email} \\
-% }
+
 
 \begin{document}
 \maketitle
@@ -59,7 +33,7 @@
 
 
 % keywords can be removed
-\keywords{First keyword \and Second keyword \and More}
+\keywords{reinforcement-learning \and adversarial \and gym \and boundary}
 
 
 % --------------------
@@ -78,6 +52,9 @@ Reinforcement learning environment offers the opportunity to observe data , perf
 
 The use of such an environment will improve the implementation of new algorithms and will be a standard tool for testing them. Thus, researchers may be able to work with state-of-the-art algorithms and methodologies, reinforcement learning in particular.
 
+A few works used reinforcement learning tools in order to generate adversarial attacks. \cite{hyrum2017evading} implemented a reinforcement learning agent that was equipped with a set of functionality-preserving operations that  may perform on PE file, and learnt through a series of games played against the anti-malware engine, which
+sequence of operations is most likely to result in evasion for a given malware sample
+
 In this work, I developed a decision-based attack environment based on the OpenAI Reinforcement Learning Gym \cite{brockman2016openai} interface. The system fits for the MNIST dataset \cite{mnist10027939599} and can quickly be expanded to support other datasets. I have researched and added support for custom actions, implemented two policies and trained a reinforcement learning agent to discover the optimal policy.
 
 The contributions of this work are as follows:
@@ -91,13 +68,20 @@ The contributions of this work are as follows:
 % --------------------
 \section{Research Question}
 % --------------------
+\subsection{Actions}
+Actions are the methods of the Agent that allow it to interact and change the environment, and thus to be transferred between states. I would like to propose a set of actions that are good enough to compare the state-of-the-art approaches for blackbox attacks.
 
-The question or gap you were trying to answer as part of this research
+\subsection{Reduced model calls}
+Blackbox attacks call models to determine their performance and to asses the next step. I would like to explore whether the proposed approach reduces the number of calls for each example.
+
+\subsection{Reinforcement learning vs deterministic algorithm}
+I wonder if the  reinforcement learning agent manages, with the same set of actions, to overcome the performance of a deterministic algorithm.
 
 % --------------------
 \section{Hypothesis}
 % --------------------
-Your initial hypothesis or assumption when addressing the research question
+I hypothesize that I would be able to identify a series of actions that produce reasonable performance in terms of  of perturbation size and amount of API calls.\\
+I believe that the reinforcement learning agent manages to overcome the performance of a deterministic algorithm because it would distill more information for the observation from the environment. However, its running time may be longer in some orders of magnitude.
 
 % --------------------
 \section{Material and methods}
@@ -176,12 +160,12 @@ Generate new centers. In offline, the environment randomly generates 20 samples 
 \subsubsection{Reward}
 The reward has to take into account two factors:
 \begin{enumerate}
-\item The classification of the adversarial example - whether the classifier labeles the examples as the target class.
-C=\begin{Bmatrix}
+\item \textbf{The classification of the adversarial example} - whether the classifier labels the examples as the target class. \\
+\begin{Bmatrix}
 1: x\in targetclass\\ 
 0: x\notin targetclass
 \end{Bmatrix}
-\item Perturbation size - the agent gets negative reward if the perturbation is bigger than maximum perturbation P and positive reward if it under this limit.
+\item \textbf{Perturbation size} - the agent gets negative reward if the perturbation is bigger than maximum perturbation P and positive reward if it under this limit.
 \end{enumerate}
 
 A suggestion for the reward function is shown in (Equation \ref{eq1}):
@@ -197,7 +181,7 @@ In this section I describe two deterministic agents that were evaluated in the t
 
 
 \subsubsection{The triangle agent}
-The triangle agent used a policy as described in \ref{alg: simple}. It used one source point and two target points to explore the boundary and then to move in a triangle track from point to point in order to reduce the perturbation. In each cycle, the agent decreases the step size.
+The triangle agent used a policy as described in algorithm \ref{alg:simple}. It used one source point and two target points to explore the boundary and then to move in a triangle track from point to point in order to reduce the perturbation. In each cycle, the agent decreases the step size.
 
 \begin{algorithm}[H] \label{alg:simple}
 \SetAlgoLined
@@ -213,89 +197,51 @@ The triangle agent used a policy as described in \ref{alg: simple}. It used one 
  go in the direction of the source sample until labeled as source;\\
  (option) decrease step size;\\
  }
- \caption{Simple agent}
+ \caption{Triangle agent policy}
 \end{algorithm}
 
 \subsubsection{The alternating triangle agent}
-The alternating triangle agent is an enhancement of the triangle agent. It executes the triangle agent for K steps, takes the best observation and used it as the initial step for the next agent. It may keep the current step size or increase it back to the initial step size.
+The alternating triangle agent is an enhancement of the triangle agent. It executes the triangle agent for K steps, takes the best observation and used it as the initial step for the next agent. It may keep the current step size or increase it back to the initial step size (algorithm \ref{alg:simple2}).
 
-to  used a policy as described in \ref{alg: simple}. It used one source point and two target points to explore the boundary and then to move in a triangle track from point to point in order to reduce the perturbation. In each cycle, the agent decreases the step size.
-
-\begin{algorithm}[H] \label{alg:simple}
+\begin{algorithm}[H] \label{alg:simple2}
 \SetAlgoLined
 \KwResult{Adversarial image}
  initialization\;
- \While{perturbation \geq PERTURBATION SIZE, steps \leq MAX STEPS }{
- go in the direction of the closet center until labeled as target;\\
- decrease step size;\\
- go in the direction of the source sample until labeled as source;\\
- (option) decrease step size;\\
- go in the direction of the farthest center until labeled as target;\\
- (option) decrease step size;\\
- go in the direction of the source sample until labeled as source;\\
- (option) decrease step size;\\
- }
- \caption{Simple agent}
+ \For{n in N}{
+ Initiate thee agent (random state=k)\\
+ Run the triangle agent for K steps.\\
+ Pick the sample with the lowest perturbation size.\\
+ (option) Increase the step size.\\
+}
+ \caption{Alternating triangle agent policy}
 \end{algorithm}
-
-
-
-
 
 \subsection{Reinforcement learning model}
 The purpose of reinforcement learning model is to teach an agent to take actions in an environment in order to maximize the cumulative reward. In this work, the agent learns how to take actions in order to generate an adversarial example for a target class while maximize the rewards which is relative to its success in generating an adversarial example with minimal perturbation size.
 
 Figure \ref{fig:rl_model} shows a widely used reinforcement learning framework. The agent accesses the environment, triggers it with an action, collects the reward and observes the new state of the environment.
 
-In the following subsections we describe each component in the figure.
-
 \begin{figure}[H]
     \centering
-        \includegraphics[scale=.8]{figures/reinforcement-learning-fig1-700.jpg}
+        \includegraphics[scale=.8]{reinforcement-learning-fig1-700.jpg}
     \caption{Reinforcement learning framework.}
     \label{fig:rl_model}
 \end{figure}
 
-\textbf{Note:} We will have to train a different agent for each target label. \\
 
+\subsubsection{DQN agent}
+I used a DQN agent. The deep Q-network (DQN) algorithm is a model-free, online, off-policy reinforcement learning method. A DQN agent is a value-based reinforcement learning agent that trains a critic to estimate the return or future rewards. DQN is a variant of Q-learning. I choose the DQN agent because I have a positive experience with it, and because it has gained human-level power in several of the Atari games that are close to our task.
 
+\subsubsection{Keras-RL}
+I used the DQN implementation of Keras-RL. Keras-RL \cite{plappert2016kerasrl} implements some state-of-the art deep reinforcement learning algorithms in Python and seamlessly integrates with the deep learning library Keras. Furthermore, keras-rl works with OpenAI Gym out of the box. 
 
+\subsection{Metrics}
 
-\subsection{The agent}
-The agent will learn his policy using one of the common reinforcement learning methods such as SARSA, DQN and etc.
-
-\subsection{Evaluation}
-\subsubsection{dataset}
-MNIST
-
-\subsubsection{The attacked classifier}
-Black box convolution network based classifier.
-
-\subsubsection{metrics}
 We will measure the number of classifier calls for a generation of an adversarial example.
 
-systemitic vs randomizsation
 
-Because in the final layer you are approximating a real state action value for each action. You output to a linear layer as your Q value estimate can generally take on any real value. And then you add a mean squares error loss with the linear layer output.
+\subsection{Hyperparam}
 
-This set up is similar any general regression problem with a neural nnetwork.
-
-Relu is used quite often but for hidden layer activation.
-
-Softmax output is quite popular for representing the policy network/function for discrete actions. But for Q learning, we are learning an approximate estimate of the Q value for each state action pair, which is a regression problem.
-
-    # Select a policy. We use eps-greedy action selection, which means that a random action is selected with probability eps. We anneal eps from 1.0 to 0.1 over the course of 1M steps. This is done so that the agent initially explores the environment (high eps) and then gradually sticks to what it knows (low eps). We also set a dedicated eps value that is used during testing. Note that we set it to 0.05 so that the agent still performs some random actions. This ensures that the agent cannot get stuck.
-
-
-
-Hyperparam
-Transferability 
-Many calls
-Dataset 
-Yaron
-
-\subsection{Agents}
-In this section we described the agents that I design and tested in this work. The first two agents are unique to this work, and the last one is a common reinforcement learning agent.
 
 % --------------------
 \section{Results}
@@ -382,33 +328,6 @@ Dummy text.
 Future work, things you wanted to accomplish but did not have the time to, open questions,
 
 \bibliographystyle{apalike}  
-\bibliography{references}  %%% Remove comment to use the external .bib file (using bibtex).
-%%% and comment out the ``thebibliography'' section.
-
-
-% %%% Comment out this section when you \bibliography{references} is enabled.
-% \begin{thebibliography}{1}
-
-% \bibitem{kour2014real}
-% George Kour and Raid Saabne.
-% \newblock Real-time segmentation of on-line handwritten arabic script.
-% \newblock In {\em Frontiers in Handwriting Recognition (ICFHR), 2014 14th
-%   International Conference on}, pages 417--422. IEEE, 2014.
-
-% \bibitem{kour2014fast}
-% George Kour and Raid Saabne.
-% \newblock Fast classification of handwritten on-line arabic characters.
-% \newblock In {\em Soft Computing and Pattern Recognition (SoCPaR), 2014 6th
-%   International Conference of}, pages 312--318. IEEE, 2014.
-
-% \bibitem{hadash2018estimate}
-% Guy Hadash, Einat Kermany, Boaz Carmeli, Ofer Lavi, George Kour, and Alon
-%   Jacovi.
-% \newblock Estimate and replace: A novel approach to integrating deep neural
-%   networks with existing applications.
-% \newblock {\em arXiv preprint arXiv:1804.09028}, 2018.
-
-% \end{thebibliography}
-
+\bibliography{references} 
 
 \end{document}
