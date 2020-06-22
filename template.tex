@@ -28,13 +28,12 @@
 \maketitle
 
 \begin{abstract}
-\lipsum[1]
+Adversarial examples are maliciously manipulated examples that fool machine learning models. Decision-based (D.B.) attacks are a form of black box attacks that rely solely on the final decision of the model. In this paper, I am presenting a framework based on  GYM environment that enables researchers to plan and test their D.B. attacks. This framework, together with CleverHans environment, may improve research cycles and open the mind to new algorithms, in particular reinforcement learning algorithm.
+In addition, I propose a novel deterministic algorithm and a reinforcement learning algorithm to fool MNIST classifier and test them both using this framework.
 \end{abstract}
-
 
 % keywords can be removed
 \keywords{reinforcement-learning \and adversarial \and gym \and boundary}
-
 
 % --------------------
 \section{Introduction}
@@ -236,18 +235,45 @@ I used a DQN agent. The deep Q-network (DQN) algorithm is a model-free, online, 
 I used the DQN implementation of Keras-RL. Keras-RL \cite{plappert2016kerasrl} implements some state-of-the art deep reinforcement learning algorithms in Python and seamlessly integrates with the deep learning library Keras. Furthermore, keras-rl works with OpenAI Gym out of the box. 
 
 \subsection{Metrics}
+I used 3 metrics to measure the performance of the algorithm: 
 
-We will measure the number of classifier calls for a generation of an adversarial example.
+\begin{enumerate}
+\item Perturbation size - the perturbation size of the adversarial example. 
+\item Number of steps - the number of steps the algorithm performs. This measurement is highly correlated with the API calls requested by the algorithm. 
+\item Fitting effort - the effort needed to fit the algorithm into a new task.
+\end{enumerate}
 
+\subsection{Hyper-parameters}
+Table \ref{tab:hyperparam} describes the hyper-parameters which used to control the environment and the agents' learning process.
+Because our learning task is an intensive computing task, we used a single set of parameters and did not perform hyper-parameter optimization..
 
-\subsection{Hyperparam}
+\begin{table}[h]
+\caption{Environment and agents hyper-parameters}
+\label{tab:hyperparam}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Hyper parameter}    & \textbf{Value} & \textbf{Description}                                          \\ \hline
+MAX\_STEPS                  & 2000           & Maximum number of steps for each episode                      \\ \hline
+INITIAL\_STEP\_SIZE         & 2              & The initial step size                                         \\ \hline
+MIN\_STEP\_SIZE             & 0.05           & The minimal step size                                         \\ \hline
+MAX\_STEP\_SIZE             & 2              & the maximal step size                                         \\ \hline
+STEPS\_TO\_IMPROVE          & 3              & the number of steps to continue after reach the goal          \\ \hline
+SAMPLES\_FOR\_CALC\_CENTERS & 300            & How many samples to use to calculate the centers              \\ \hline
+MAX\_PERTURBATION           & 5              & The maximal size of perturbation which gives posisitve reward \\ \hline
+REWARD\_COEF                & 10             & The ratio between perturbation reard and label reward         \\ \hline
+DQN\_LR                     & 0.01           & The size of the learning rate                                 \\ \hline
+WINDOW\_LENGTH              & 4              & The size of the experience replay window                      \\ \hline
+TARGET\_MODEL\_UPDATE       & 500            & The rate of updating the dqn target network                   \\ \hline
+\end{tabular}
+\end{table}
 
 
 % --------------------
 \section{Results}
 % --------------------
 
-\begin{table}[]
+\subsection{Simple centers algorithm}
+\begin{table}[h]
 \caption{Simple centers algorithm. The table explains the details about the minimal perturbations that happened in the episodes. Min perturbations is the minimum perturbations reached in all episodes. Max perturbations is the maximum perturbations over all the episodes' perturbation.}
 \label{tab:simple_result}
 \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|}
@@ -270,8 +296,9 @@ We will measure the number of classifier calls for a generation of an adversaria
 
 for all targets, there is a source example that is very close to the boundary, thus, one or two steps are enough to produce an adversarial example.
 
-
-\begin{table}[]
+\subsection{Iterative centers algorithm}
+\subsubsection{Version1 - continue with minimal step size}
+\begin{table}[h]
 \caption{Iterative centers algorithm results}
 \label{tab:iterative_result}
 \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|}
@@ -291,41 +318,76 @@ for all targets, there is a source example that is very close to the boundary, t
 \end{tabular}
 \end{table}
 
+\subsubsection{Version2 - reset the step size to the initial step size value}
+\begin{table}[h]
+\caption{Iterative centers algorithm results with increasing the step size}
+\label{tab:iterative_result_new_init}
+\begin{tabular}{|l|l|l|l|l|l|l|l|l|l|}
+\hline
+\textbf{}       & \textbf{}     & \multicolumn{4}{c|}{\textbf{perturbation}}                      & \multicolumn{4}{c|}{\textbf{steps}}                             \\ \hline
+\textbf{target} & \textbf{nobs} & \textbf{min} & \textbf{max} & \textbf{mean} & \textbf{variance} & \textbf{min} & \textbf{max} & \textbf{mean} & \textbf{variance} \\ \hline
+0 & 100  & 3.23     & 6.53     & 5.07      & 0.51          & 3         & 1990      & 780.97     & 362951.63      \\ \hline
+1 & 100  & 3.8      & 9.16     & 6.06      & 1.36          & 2         & 1827      & 569.13     & 337126.05      \\ \hline
+2 & 100  & 3.42     & 9.49     & 4.93      & 0.9           & 2         & 1999      & 625.76     & 340929.54      \\ \hline
+3 & 100  & 3.33     & 10.6     & 5.11      & 1.35          & 2         & 1999      & 816.65     & 441403.28      \\ \hline
+4 & 100  & 3.33     & 8.78     & 5.21      & 1.21          & 2         & 1999      & 801.98     & 408205.86      \\ \hline
+5 & 100  & 3.79     & 9.09     & 5.86      & 1.72          & 2         & 1995      & 180.07     & 102842.85      \\ \hline
+6 & 100  & 2.0      & 7.51     & 5.3       & 0.91          & 1         & 1997      & 867.24     & 339526.18      \\ \hline
+7 & 100  & 3.02     & 9.55     & 5.43      & 1.67          & 2         & 1827      & 622.48     & 341692.9       \\ \hline
+8 & 100  & 3.3      & 7.03     & 4.95      & 0.87          & 2         & 1997      & 555.36     & 345146.5       \\ \hline
+9 & 100  & 3.36     & 7.9      & 5.05      & 0.94          & 2         & 1835      & 631.79     & 377226.27      \\ \hline
+\end{tabular}
+\end{table}
 
-200000 - 2383(40min) - 0000 - DECREASE_STEP
-200000 - 2383(40min) - 0000 - CLOSET CLUSTER
 
-% \includemedia[width=0.6\linewidth,height=0.6\linewidth,activate=pageopen,
-% passcontext,
-% transparent,
-% addresource=myclip.mp4,
-% flashvars={source=myclip.mp4}
-% ]{\includegraphics[width=0.6\linewidth]{penguins}}{VPlayer.swf}
+\subsection{Reinforcement learning}
 
-\begin{frame}
-\frametitle{Forward Kinematics}
+\subsubsection{Fitting effort}
+It took 40 minutes to perform 10,000 learning steps on the i7 CPU Linux server.
+The full fitting task \textbf{for a single target}, lasted more than five days.
 
-\begin{center}
-\includemedia[
-    activate=onclick,
-    width=0.75\textwidth
-]{\includegraphics{figures/reinforcement-learning-fig1-700.jpg}}{myclip.mp4}
-\end{center}
-\end{frame}
-Dummy text.
+\subsubsection{Result}
+todo
+
+
+
+\subsection{Summary result}
+
+\begin{table}[h]
+\caption{Summary of all 4 methods. The table shows the mean pretrubation size for each label}
+\label{tab:summary}
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+  & simple & iterative & iterative with new init & RL \\ \hline
+0 & 5.42   & 5.15      & 5.07                    &    \\ \hline
+1 & 6.23   & 5.87      & 6.06                    &    \\ \hline
+2 & 5.35   & 5.02      & 4.93                    &    \\ \hline
+3 & 5.79   & 5.18      & 5.11                    &    \\ \hline
+4 & 5.78   & 5.24      & 5.21                    &    \\ \hline
+5 & 6.2    & 5.75      & 5.86                    &    \\ \hline
+6 & 5.87   & 5.38      & 5.3                     &    \\ \hline
+7 & 6.06   & 5.41      & 5.43                    &    \\ \hline
+8 & 5.28   & 4.91      & 4.95                    &    \\ \hline
+9 & 5.69   & 5.39      & 5.05                    &    \\ \hline
+\end{tabular}
+\end{table}
+
 
 % --------------------
 \section{Discussion and Conclusions}
 % --------------------
 Your interpretation of the results and findings
-Dummy text. 
 
 
 % --------------------
-\section{Follow up steps}
+\section{Future work}
 % --------------------
+The first direction for future work is to extend the action space. Adding actions to the environment would make it easier to support more algorithms that can perform better.
 
-Future work, things you wanted to accomplish but did not have the time to, open questions,
+Another interesting research direction would be to give the iterative policy to the reinforcement algorithm as its initial policy and to give it the task of refining it. The combination of the two algorithms may achieve a better result with less computational power.
+
+Finally, I would like to recommend that this framework be published as an open source project for the community. I think this complements the CleverHans environment. The use of both together can enhance the researcher's ability to develop and test new algorithms.
+
 
 \bibliographystyle{apalike}  
 \bibliography{references} 
