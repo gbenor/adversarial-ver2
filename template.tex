@@ -13,8 +13,10 @@
 \usepackage{microtype}      % microtypography
 \usepackage{lipsum}
 \usepackage[ruled,vlined]{algorithm2e}
+\usepackage{graphicx}
 
-\title{A reinforcement-learning interface environment to design and evaluate adversarial attacks}
+
+\title{Adversarial Gym - A reinforcement-learning framework for the design and evaluation of adversarial attacks}
 
 
 \author{
@@ -29,7 +31,8 @@
 
 \begin{abstract}
 Adversarial examples are maliciously manipulated examples that fool machine learning models. Decision-based (D.B.) attacks are a form of black box attacks that rely solely on the final decision of the model. In this paper, I am presenting a framework based on  GYM environment that enables researchers to plan and test their D.B. attacks. This framework, together with CleverHans environment, may improve research cycles and open the mind to new algorithms, in particular reinforcement learning algorithm.
-In addition, I propose a novel deterministic algorithm and a reinforcement learning algorithm to fool MNIST classifier and test them both using this framework.
+In addition, I propose a novel deterministic algorithm and a reinforcement learning algorithm to fool MNIST classifier and test them both using this framework.\\
+\textbf{Availability and implementation:} Adversarial Gym is freely available at \url{https://github.com/gbenor/Adversarial_RL}
 \end{abstract}
 
 % keywords can be removed
@@ -42,11 +45,11 @@ Many high-performance machine learning algorithms are susceptible to minimal cha
 
 Decision-based attacks are a category of black box attacks which depend solely on the model's final decision. In terms of the structure of the inputs and outputs and certain examples classified by the model, the attacker has little knowledge regarding the  the model to be attacked.
 
-Previous works suggested algorithms for finding adversarial examples with minimal perturbation size and minimal calls of the model to be attacked. \cite{brendel2017decision} introduced a the boundary attack that starts from a large adversarial perturbation and then seeks to reduce the perturbation while staying adversarial. \cite{chen2019hopskipjumpattack} proposed a novel unbiased estimate of gradient direction at the decision boundary based solely on access to model decisions. Their algorithms requires significantly fewer model queries than several state-of-the-art decision-based adversarial attacks and achieves competitive performance in attacking several widely-used defense mechanisms.
+Previous works suggested algorithms for finding adversarial examples with minimal perturbation size and minimal calls of the model to be attacked. \cite{brendel2017decision} introduced a boundary attack that starts from a large adversarial perturbation and then seeks to reduce the perturbation while staying adversarial. \cite{chen2019hopskipjumpattack} proposed a novel unbiased estimate of gradient direction at the decision boundary based solely on access to model decisions. Their algorithms requires significantly fewer model queries than several state-of-the-art decision-based adversarial attacks and achieves competitive performance in attacking several widely-used defense mechanisms.
 
 In order to design and evaluate more attack algorithms, there is a real need for an environment that allows data interaction and results measurement. An existing, well known and powerful environment is CleverHans. CleverHans \cite{papernot2018cleverhans} is a software library that provides standardized reference implementations of adversarial example construction techniques and adversarial training. The library may be used to develop more robust machine learning models and to provide standardized benchmarks of models' performance in the adversarial setting. 
 
-I looked at the same problems that CleverHans encountered and sought to address in a different way. I have observed that the requirements of the testing environment are similar and may be reduced to those of the reinforcement learning environment.
+I looked at the same problems that CleverHans encountered and sought to address it in a different way. I have observed that the requirements of the testing environment are similar and may be reduced to those of the reinforcement learning environment.
 Reinforcement learning environment offers the opportunity to observe data , perform a single or sequence of actions and receive the corresponding score. Here, the attack algorithms are equivalent to the reinforcement learning policies.
 
 The use of such an environment will improve the implementation of new algorithms and will be a standard tool for testing them. Thus, researchers may be able to work with state-of-the-art algorithms and methodologies, reinforcement learning in particular.
@@ -88,10 +91,10 @@ I believe that the reinforcement learning agent manages to overcome the performa
 
 \subsection{Data}
 I used the MNIST \cite{mnist10027939599} dataset for this work. The dataset was downloaded using Keras API without any additional prepossessing. 
-The MNIST dataset has a training set of 60,000 examples, and a test set of 10,000 examples. It is a subset of a larger set available from NIST. The original black and white (bilevel) images from NIST were size normalized to fit in a 20x20 pixel box while preserving their aspect ratio. The resulting images contain grey levels as a result of the anti-aliasing technique used by the normalization algorithm. the images were centered in a 28x28 image by computing the center of mass of the pixels, and translating the image so as to position this point at the center of the 28x28 field. \\
+The MNIST dataset has a training set of 60,000 examples, and a test set of 10,000 examples. It is a subset of a larger set available from NIST. The original black and white images from NIST were size normalized to fit in a 20x20 pixel box while preserving their aspect ratio. The resulting images contain grey levels as a result of the anti-aliasing technique used by the normalization algorithm. the images were centered in a 28x28 image by computing the center of mass of the pixels, and translating the image so as to position this point at the center of the 28x28 field. \\
 
 \subsection{The model to be attacked}
-The model I would like to attacked is the convolution neural network used during the course labs. It achieved accuracy performance of 0.975.
+The model I would like to attack is the convolution neural network used during the course labs. It achieved accuracy performance of 0.975.
 
 \subsection{Evaluation environment}
 I chose OpenAI Gym \cite{brockman2016openai} as my evaluation environment. Gym is a toolkit for developing and comparing reinforcement learning algorithms. It makes no assumptions about the structure of the tested agent, and is compatible with any numerical computation library, such as TensorFlow or Theano.
@@ -129,14 +132,14 @@ The following actions are available for the agent:
 Decrease the step size according to the equation below.: \\
 step=\begin{Bmatrix}
 step size > 0.4 : step size/2\\ 
-o.w.: max(0.05, step_size- 0.05)
+o.w.: max(0.05, step size- 0.05)
 \end{Bmatrix}
 \item 
 \textbf{Increase step} - 
 Increase the step size according to the equation below.: \\
 step=\begin{Bmatrix}
 step size > 0.4 : step size/2\\ 
-o.w.: max(0.05, step_size- 0.05)
+o.w.: max(0.05, step size - 0.05)
 \end{Bmatrix}
 
 \item 
@@ -153,7 +156,7 @@ Go one step in the direction of the original sample.
 
 \item 
 \textbf{New centers} - 
-Generate new centers. In offline, the environment randomly generates 20 samples with the target label and select a pair of samples with the largest distance between them. The output of this process is 2 target samples which called centers. The agent calculates the distance to each center at each step. The closest target center called "closest cluster" and farthest one called "farthest center".
+Generate new centers. In offline, the environment randomly generates 300 samples with the target label and select a pair of samples with the largest distance between them. The output of this process is 2 target samples which called centers. The agent calculates the distance to each center at each step. The closest target center called "closest cluster" and farthest one called "farthest center".
 \end{enumerate}
 
 \subsubsection{Reward}
@@ -176,11 +179,11 @@ reward = \alpha C + \beta  \left (P-d\left ( o, t \right )  \right )
 The is done signal stops the agent while it does the exploration-exploitation tasks. We would stop the agent if it perform more than L steps, or it reached the target class under the perturbation size constraint.
 
 \subsection{Deterministic agents}
-In this section I describe two deterministic agents that were evaluated in the this work. The agents' policy was described using a graph. The agents moves from initial state and takes an action based on the current state and observation.
+In this section I describe two deterministic agents that were evaluated in the this work. The agents' policy was implemented using a graph. The agents moves from initial state and takes an action based on the current state and observation.
 
 
 \subsubsection{The triangle agent}
-The triangle agent used a policy as described in algorithm \ref{alg:simple}. It used one source point and two target points to explore the boundary and then to move in a triangle track from point to point in order to reduce the perturbation. In each cycle, the agent decreases the step size.
+The triangle agent used a policy as described in Algorithm \ref{alg:simple} and Figures \ref{fig:graph}, \ref{fig:illustration}. It used one source point and two target points to explore the boundary and then to move in a triangle track from point to point in order to reduce the perturbation. In each cycle, the agent decreases the step size.
 
 \begin{algorithm}[H] \label{alg:simple}
 \SetAlgoLined
@@ -198,6 +201,22 @@ The triangle agent used a policy as described in algorithm \ref{alg:simple}. It 
  }
  \caption{Triangle agent policy}
 \end{algorithm}
+
+
+\begin{figure}[h]
+    \centering
+        \includegraphics[scale=.8]{graph.png}
+    \caption{Graph diagram for algorithm 1}
+    \label{fig:graph}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+        \includegraphics[scale=1]{ilustration.png}
+    \caption{Illustration of algorithm 1. The orange line is the first sequence of steps in the direction of the closest center, the green line is the second sequence of steps in the direction of the farthest center and the red line is the third sequence of steps in the direction of the closest center again.}
+    \label{fig:illustration}
+\end{figure}
+
 
 \subsubsection{The alternating triangle agent}
 The alternating triangle agent is an enhancement of the triangle agent. It executes the triangle agent for K steps, takes the best observation and used it as the initial step for the next agent. It may keep the current step size or increase it back to the initial step size (algorithm \ref{alg:simple2}).
@@ -220,7 +239,7 @@ The purpose of reinforcement learning model is to teach an agent to take actions
 
 Figure \ref{fig:rl_model} shows a widely used reinforcement learning framework. The agent accesses the environment, triggers it with an action, collects the reward and observes the new state of the environment.
 
-\begin{figure}[H]
+\begin{figure}[h]
     \centering
         \includegraphics[scale=.8]{reinforcement-learning-fig1-700.jpg}
     \caption{Reinforcement learning framework.}
@@ -245,7 +264,7 @@ I used 3 metrics to measure the performance of the algorithm:
 
 \subsection{Hyper-parameters}
 Table \ref{tab:hyperparam} describes the hyper-parameters which used to control the environment and the agents' learning process.
-Because our learning task is an intensive computing task, we used a single set of parameters and did not perform hyper-parameter optimization..
+Because the learning task is an intensive computing task, I used a single set of parameters and did not perform hyper-parameter optimization..
 
 \begin{table}[h]
 \caption{Environment and agents hyper-parameters}
@@ -271,10 +290,26 @@ TARGET\_MODEL\_UPDATE       & 500            & The rate of updating the dqn targ
 % --------------------
 \section{Results}
 % --------------------
+This section presents the results of running the various algorithms on the environment. First, I present the results of the deterministic algorithm, then the results of the reinforcement learning algorithm, and finally, I present a comparison between the different methods.
 
-\subsection{Simple centers algorithm}
+For each algorithm I present the information for each target label that consists the following fields:
+
+\begin{enumerate}
+\item Target label - the algorithm goal.
+\item nobs - Number of experiments. I run 100 random tests per target label for all algorithms.
+\item Min perturbation - the minimal perturbations that happened in the episodes. 
+\item Max perturbation - the maximum of all minimal perturbation over all the episodes.
+\item Steps - the minimal and maximal steps needed to reach minimum perturbation. Note: these are not the steps needed to reach the Min perturbation and Max perturbation.
+\end{enumerate}
+
+\subsection{Deterministic algorithms}
+This section presents the results of the deterministic algorithms. 
+
+\subsubsection{Triangle agent result}
+Table \ref{tab:simple_result} present the results of the triangle agent.
+
 \begin{table}[h]
-\caption{Simple centers algorithm. The table explains the details about the minimal perturbations that happened in the episodes. Min perturbations is the minimum perturbations reached in all episodes. Max perturbations is the maximum perturbations over all the episodes' perturbation.}
+\caption{Triangle agent's result. The table explains the details about the minimal perturbations that happened in the episodes. Min perturbations is the minimum perturbations reached in all episodes. Max perturbations is the maximum perturbations over all the episodes' minimal perturbation.}
 \label{tab:simple_result}
 \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|}
 \hline
@@ -294,10 +329,9 @@ TARGET\_MODEL\_UPDATE       & 500            & The rate of updating the dqn targ
 \end{table}
 
 
-for all targets, there is a source example that is very close to the boundary, thus, one or two steps are enough to produce an adversarial example.
+\subsubsection{Alternating triangle agents}
+Table \ref{tab:iterative_result} shows the result of the alternating triangle agent, without resetting the step size as the centers are changed.
 
-\subsection{Iterative centers algorithm}
-\subsubsection{Version1 - continue with minimal step size}
 \begin{table}[h]
 \caption{Iterative centers algorithm results}
 \label{tab:iterative_result}
@@ -318,7 +352,8 @@ for all targets, there is a source example that is very close to the boundary, t
 \end{tabular}
 \end{table}
 
-\subsubsection{Version2 - reset the step size to the initial step size value}
+Table \ref{tab:iterative_result_new_init} shows the result of the alternating triangle agent, with resetting the step size to the initial step size value every time the centers are changed.
+
 \begin{table}[h]
 \caption{Iterative centers algorithm results with increasing the step size}
 \label{tab:iterative_result_new_init}
@@ -339,7 +374,7 @@ for all targets, there is a source example that is very close to the boundary, t
 \end{tabular}
 \end{table}
 
-
+\clearpage
 \subsection{Reinforcement learning}
 
 \subsubsection{Fitting effort}
@@ -349,12 +384,10 @@ The full fitting task \textbf{for a single target}, lasted more than five days.
 \subsubsection{Result}
 todo
 
-
-
 \subsection{Summary result}
 
 \begin{table}[h]
-\caption{Summary of all 4 methods. The table shows the mean pretrubation size for each label}
+\caption{Summary of all 4 methods. The table shows the mean perturbation size for each label}
 \label{tab:summary}
 \begin{tabular}{|l|l|l|l|l|}
 \hline
@@ -376,7 +409,19 @@ todo
 % --------------------
 \section{Discussion and Conclusions}
 % --------------------
-Your interpretation of the results and findings
+All methods managed to find adversarial examples that fool the blackbox classifier. However, we need to look carefully at the results. There are examples that with few algorithms steps achieve low perturbation size. These examples come from source labels very close to the boundary. Thus, few steps that hardly touch the example can create a fantastic result. I suggest giving this example small weight in our analysis and concentrate on the average perturbation metric. \\
+
+The average size of the perturbation is larger than that reported in other blackbox works. Current algorithm performance is not enough to attack real-world machine learning models. However, the results were generated without any hyperparameter optimisation. I assume that hyperparameter optimization will dramatically boost the performance. 
+
+The proposed actions are sufficient for exploration and the discovery of adversarial examples. I believe that adding more actions to those supported in this work will improve the results even more. 
+
+The deterministic algorithms did not require training at all. This is a major benefit for them. In fact, they require less computing power and memory resources that is essential to the development of adversarial examples for real-world models.
+
+The alternating algorithm showed better results than the others. It takes advantage of more samples from the training set, and it can touch more points around the boundary line. Again, I believe that with the right hyperparameter optimization, the results of this method can be improved even more.
+
+The reinforcement learning method has shown the poorest results. This is due to the large amount of training needed to fit the agent. I assume that a combination of a deterministic algorithm and a reinforcement learning agent, as suggested for future work, may be a promising direction.
+
+The environment and framework that have been developed during this work are empowering the research work. They have the ability to be a platform for designing and evaluating attacks algorithms based on reinforcement learning building blocks. The effort that will be required to plan and analyze the attacks in the future would be substantially limited. 
 
 
 % --------------------
